@@ -9,8 +9,10 @@ var Scout = Parse.Object.extend("Scout");
 
 exports.postScouts = function(req, res) {
 
+	console.log(req.body.position)
+
 	var scout = new Scout();
-	var point = new Parse.GeoPoint(req.query.position);
+	var point = new Parse.GeoPoint(req.body.position);
 
 	scout.set("location", point);
 
@@ -27,6 +29,6 @@ exports.postScouts = function(req, res) {
 
 exports.getScouts = function(req, res) {
 
-	res.json({res: res.query});
+	res.json({req: req.query});
 
 };
