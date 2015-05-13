@@ -16,8 +16,7 @@ exports.postScouts = function(req, res) {
 
 	scout.save(null, {
 		success: function(scout) {
-			console.log(scout);
-			res.json(scout);
+			res.json(scout.id);
 		},
 		error: function(scout, error) {
 			res.send(error);
