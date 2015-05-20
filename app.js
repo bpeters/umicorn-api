@@ -10,8 +10,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 var router = express.Router();
 
 router.route('/scouts')
-	.post(api.postScouts)
+	.post(api.createScout)
 	.get(api.getScouts);
+
+router.route('/scouts/:id')
+	.post(api.updateScout)
+	.get(api.getScout);
 
 app.use('/api/v1', router);
 
