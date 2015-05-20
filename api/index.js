@@ -29,6 +29,7 @@ exports.createScout = function(req, res) {
 	var point = new Parse.GeoPoint(req.body);
 
 	scout.set("location", point);
+	scout.set("deletedAt", null);
 
 	scout.save(null, {
 		success: function(scout) {
@@ -48,6 +49,7 @@ exports.getScouts = function(req, res) {
 	var query = new Parse.Query(Scout);
 
 	query.near("location", point);
+	query.equalTo("deletedAt", null);
 
 	query.limit(10);
 
@@ -78,6 +80,7 @@ exports.updateScout = function(req, res) {
 		if (error) res.send(error);
 
 		scout.set("location", point);
+
 		scout.save(null, {
 			success: function(scout) {
 				res.json(scout.id);
@@ -97,6 +100,27 @@ exports.getScout = function(req, res) {
 
 		if (error) res.send(error);
 		res.json(scout.id);
+
+	});
+
+};
+
+exports.stopScout = function(req, res) {
+
+	findScout(req.params, function(error, scout) {
+
+		if (error) res.send(error);
+
+		scout.set("deletedAt", Date.now());
+
+		scout.save(null, {
+			success: function(scout) {
+				res.json(scout.id);
+			},
+			error: function(scout, error) {
+				res.send(error);
+			}
+		});
 
 	});
 

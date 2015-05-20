@@ -15,7 +15,8 @@ router.route('/scouts')
 
 router.route('/scouts/:id')
 	.post(api.updateScout)
-	.get(api.getScout);
+	.get(api.getScout)
+	.delete(api.stopScout);
 
 app.use('/api/v1', router);
 
