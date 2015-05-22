@@ -1,27 +1,33 @@
 var Parse = require('parse').Parse;
 var config = require('config');
 var _ = require('lodash');
+var Q = require('q');
 var parseApp = process.env.PARSE_APP || config.get('Parse.app');
 var parseJavascript = process.env.PARSE_JAVASCRIPT || config.get('Parse.javascript');
 
 Parse.initialize(parseApp, parseJavascript);
 
 var Scout = Parse.Object.extend("Scout");
+var Umicorn = Parse.Object.extend("Umicorn");
 
-function findScout (id, callback) {
+var findScout = function (id) {
+
+	var deferred = Q.defer();
 
 	var query = new Parse.Query(Scout);
 
 	query.get(id, {
-		success: function(scout) {
-			return callback(null, scout);
+		success: function(obj) {
+			deferred.resolve(obj);
 		},
-		error: function(object, error) {
-			return callback(error, null);
+		error: function(obj, error) {
+			deferred.reject(error);
 		}
 	});
 
-}
+	return deferred.promise;
+
+};
 
 exports.createScout = function(req, res) {
 
@@ -32,17 +38,17 @@ exports.createScout = function(req, res) {
 	scout.set("deletedAt", null);
 
 	scout.save(null, {
-		success: function(scout) {
-			res.json(scout.id);
+		success: function(obj) {
+			res.json(obj.id);
 		},
-		error: function(scout, error) {
+		error: function(obj, error) {
 			res.send(error);
 		}
 	});
 
 };
 
-exports.getScouts = function(req, res) {
+exports.getScout = function(req, res) {
 
 	var point = new Parse.GeoPoint(req.query);
 
@@ -63,7 +69,7 @@ exports.getScouts = function(req, res) {
 			});
 			res.json(scouts);
 		},
-		error: function(scout, error) {
+		error: function(results, error) {
 			res.send(error);
 		}
 	});
@@ -71,57 +77,101 @@ exports.getScouts = function(req, res) {
 };
 
 
-exports.updateScout = function(req, res) {
+exports.updateScoutById = function(req, res) {
 
 	var point = new Parse.GeoPoint(req.body);
+	var scout = Q.when(findScout(req.params), function(scout) {
+		return scout;
+	});
 
-	findScout(req.params, function(error, scout) {
+	scout.set("location", point);
 
-		if (error) res.send(error);
-
-		scout.set("location", point);
-
-		scout.save(null, {
-			success: function(scout) {
-				res.json(scout.id);
-			},
-			error: function(scout, error) {
-				res.send(error);
-			}
-		});
-
+	scout.save(null, {
+		success: function(obj) {
+			res.json(obj.id);
+		},
+		error: function(obj, error) {
+			res.send(error);
+		}
 	});
 
 };
 
-exports.getScout = function(req, res) {
+exports.getScoutById = function(req, res) {
 
-	findScout(req.params, function(error, scout) {
+	var scout = Q.when(findScout(req.params), function(scout) {
+		return scout;
+	});
 
-		if (error) res.send(error);
-		res.json(scout.id);
+	res.json(scout.id);
 
+};
+
+exports.stopScoutById = function(req, res) {
+
+	var scout = Q.when(findScout(req.params), function(scout) {
+		return scout;
+	});
+
+	scout.set("deletedAt", Date.now());
+
+	scout.save(null, {
+		success: function(obj) {
+			res.json(obj.id);
+		},
+		error: function(obj, error) {
+			res.send(error);
+		}
 	});
 
 };
 
-exports.stopScout = function(req, res) {
+exports.createMissedConnection = function(req, res) {
 
-	findScout(req.params, function(error, scout) {
+	var scout = Q.when(findScout(req.params), function(scout) {
+		return scout;
+	});
 
-		if (error) res.send(error);
+	scout.set("missedConnection", req.body);
 
-		scout.set("deletedAt", Date.now());
-
-		scout.save(null, {
-			success: function(scout) {
-				res.json(scout.id);
-			},
-			error: function(scout, error) {
-				res.send(error);
-			}
-		});
-
+	scout.save(null, {
+		success: function(obj) {
+			res.json(obj.id);
+		},
+		error: function(obj, error) {
+			res.send(error);
+		}
 	});
 
 };
+
+exports.createUmicorns = function(req, res) {
+
+	var scout = findScout(req.params);
+
+	var umicorns = [];
+	var promises = [];
+
+	_.forEach(req.body, function(umi) {
+
+		promises.push(
+			findScout(umi.id)
+		);
+
+	});
+
+	umicorns = Q.all(promises).then(function(scouts) {
+		return scouts;
+	});
+
+	Parse.Object.saveAll(umicorns, {
+		success: function(objs) {
+			res.json(objs);
+		},
+		error: function(objs, error) {
+			res.send(error);
+		}
+	});
+
+};
+

@@ -11,12 +11,19 @@ var router = express.Router();
 
 router.route('/scouts')
 	.post(api.createScout)
-	.get(api.getScouts);
+	.get(api.getScout);
 
 router.route('/scouts/:id')
-	.post(api.updateScout)
-	.get(api.getScout)
-	.delete(api.stopScout);
+	.post(api.updateScoutById)
+	.get(api.getScoutById)
+	.delete(api.stopScoutById);
+
+router.route('/scouts/:id/missed_connection')
+	.post(api.createMissedConnection);
+
+router.route('/scouts/:id/umicorns')
+	.post(api.createUmicorns);
+	.get(api.getUmicorns);
 
 app.use('/api/v1', router);
 
