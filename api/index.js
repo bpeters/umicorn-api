@@ -160,8 +160,19 @@ exports.createUmicorns = function(req, res) {
 
 	});
 
-	umicorns = Q.all(promises).then(function(scouts) {
-		return scouts;
+	Q.all(promises).then(function(scouts) {
+
+		_.forEach(scouts, function(umi) {
+
+			var umicorn = new Umicorn();
+
+			umicorn.set('scout', scout);
+			umicorn.set('umicorn', umi);
+
+			umicorns.push(umicorn);
+
+		});
+		
 	});
 
 	Parse.Object.saveAll(umicorns, {
