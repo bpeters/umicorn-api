@@ -186,3 +186,29 @@ exports.createUmicorns = function(req, res) {
 
 };
 
+exports.getUmicorns = function(req, res) {
+
+	var scout = Q.when(findScout(req.params), function(scout) {
+		return scout;
+	});
+
+	var query = new Parse.Query(Umicorn);
+
+	query.equalTo("scout", scout);
+
+	query.find({
+		success: function(results) {
+			var umicorns = [];
+			_.forEach(results, function(umicorn) {
+				umicorns.push({
+					id: umicorn.get('id')
+				});
+			});
+			res.json(umicorns);
+		},
+		error: function(results, error) {
+			res.send(error);
+		}
+	});
+
+};

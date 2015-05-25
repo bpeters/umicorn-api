@@ -22,7 +22,7 @@ router.route('/scouts/:id/missed_connection')
 	.post(api.createMissedConnection);
 
 router.route('/scouts/:id/umicorns')
-	.post(api.createUmicorns);
+	.post(api.createUmicorns)
 	.get(api.getUmicorns);
 
 app.use('/api/v1', router);
