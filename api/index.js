@@ -54,7 +54,7 @@ exports.getScout = function(req, res) {
 
 	var query = new Parse.Query(Scout);
 
-	query.near("location", point);
+	//query.near("location", point);
 	query.equalTo("deletedAt", null);
 
 	query.limit(10);
