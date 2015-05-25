@@ -39,7 +39,7 @@ exports.createScout = function(req, res) {
 
 	scout.save(null, {
 		success: function(obj) {
-			res.json(obj.id);
+			res.json(obj);
 		},
 		error: function(obj, error) {
 			res.send(error);
@@ -54,20 +54,14 @@ exports.getScout = function(req, res) {
 
 	var query = new Parse.Query(Scout);
 
-	query.near("location", point);
-	//query.equalTo("deletedAt", null);
+	//query.near("location", point);
+	query.equalTo("deletedAt", null);
 
 	query.limit(10);
 
 	query.find({
-		success: function(results) {
-			var scouts = [];
-			_.forEach(results, function(scout) {
-				scouts.push({
-					id: scout.get('id')
-				});
-			});
-			res.json(scouts);
+		success: function(objs) {
+			res.json(objs);
 		},
 		error: function(results, error) {
 			res.send(error);
@@ -80,135 +74,134 @@ exports.getScout = function(req, res) {
 exports.updateScoutById = function(req, res) {
 
 	var point = new Parse.GeoPoint(req.body);
-	var scout = Q.when(findScout(req.params), function(scout) {
-		return scout;
-	});
 
-	scout.set("location", point);
+	findScout(req.params.id).then(function(scout) {
 
-	scout.save(null, {
-		success: function(obj) {
-			res.json(obj.id);
-		},
-		error: function(obj, error) {
-			res.send(error);
-		}
+		scout.set("location", point);
+
+		scout.save(null, {
+			success: function(obj) {
+				res.json(obj);
+			},
+			error: function(obj, error) {
+				res.send(error);
+			}
+		});
+
 	});
 
 };
 
 exports.getScoutById = function(req, res) {
 
-	var scout = Q.when(findScout(req.params), function(scout) {
-		return scout;
-	});
+	findScout(req.params.id).then(function(scout) {
 
-	res.json(scout.id);
+		res.json(scout);
+
+	});
 
 };
 
 exports.stopScoutById = function(req, res) {
 
-	var scout = Q.when(findScout(req.params), function(scout) {
-		return scout;
-	});
+	var date = new Date();
 
-	scout.set("deletedAt", Date.now());
+	findScout(req.params.id).then(function(scout) {
 
-	scout.save(null, {
-		success: function(obj) {
-			res.json(obj.id);
-		},
-		error: function(obj, error) {
-			res.send(error);
-		}
+		scout.set("deletedAt", date);
+
+		scout.save(null, {
+			success: function(obj) {
+				res.json(obj);
+			},
+			error: function(obj, error) {
+				res.send(error);
+			}
+		});
+
 	});
 
 };
 
 exports.createMissedConnection = function(req, res) {
 
-	var scout = Q.when(findScout(req.params), function(scout) {
-		return scout;
-	});
+	findScout(req.params.id).then(function(scout) {
 
-	scout.set("missedConnection", req.body);
+		scout.set("missedConnection", req.body.message);
 
-	scout.save(null, {
-		success: function(obj) {
-			res.json(obj.id);
-		},
-		error: function(obj, error) {
-			res.send(error);
-		}
+		scout.save(null, {
+			success: function(obj) {
+				res.json(obj);
+			},
+			error: function(obj, error) {
+				res.send(error);
+			}
+		});
+
 	});
 
 };
 
 exports.createUmicorns = function(req, res) {
 
-	var scout = findScout(req.params);
+	findScout(req.params.id).then(function(scout) {
 
-	var umicorns = [];
-	var promises = [];
+		var umicorns = [];
+		var promises = [];
 
-	_.forEach(req.body, function(umi) {
+		_.forEach(req.body.scouts, function(umi) {
 
-		promises.push(
-			findScout(umi.id)
-		);
-
-	});
-
-	Q.all(promises).then(function(scouts) {
-
-		_.forEach(scouts, function(umi) {
-
-			var umicorn = new Umicorn();
-
-			umicorn.set('scout', scout);
-			umicorn.set('umicorn', umi);
-
-			umicorns.push(umicorn);
+			promises.push(
+				findScout(umi.id)
+			);
 
 		});
-		
-	});
 
-	Parse.Object.saveAll(umicorns, {
-		success: function(objs) {
-			res.json(objs);
-		},
-		error: function(objs, error) {
-			res.send(error);
-		}
+		Q.all(promises).then(function(scouts) {
+
+			_.forEach(scouts, function(umi) {
+
+				var umicorn = new Umicorn();
+
+				umicorn.set('scout', scout);
+				umicorn.set('umicorn', umi);
+
+				umicorns.push(umicorn);
+
+			});
+
+			Parse.Object.saveAll(umicorns, {
+				success: function(objs) {
+					res.json(objs);
+				},
+				error: function(objs, error) {
+					res.send(error);
+				}
+			});
+			
+		});
+
 	});
 
 };
 
 exports.getUmicorns = function(req, res) {
 
-	var scout = Q.when(findScout(req.params), function(scout) {
-		return scout;
-	});
+	findScout(req.params.id).then(function(scout) {
 
-	var query = new Parse.Query(Umicorn);
+		var query = new Parse.Query(Umicorn);
 
-	query.equalTo("scout", scout);
+		query.equalTo("scout", scout);
 
-	query.find({
-		success: function(results) {
-			var umicorns = [];
-			_.forEach(results, function(umicorn) {
-				umicorns.push({
-					id: umicorn.get('id')
-				});
-			});
-			res.json(umicorns);
-		},
-		error: function(results, error) {
-			res.send(error);
-		}
+		query.find({
+			success: function(objs) {
+				res.json(objs);
+			},
+			error: function(results, error) {
+				res.send(error);
+			}
+		});
+
 	});
 
 };
